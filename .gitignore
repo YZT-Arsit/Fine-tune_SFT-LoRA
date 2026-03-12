@@ -1,0 +1,25 @@
+.env
+*.env
+config.local.j# secrets
+.env
+*.env
+config.local.json
+
+# macOS
+.DS_Store
+
+# python
+__pycache__/
+*.pyc
+
+# logs
+logs/
+*.log
+
+# outputs
+outputs/
+
+# local venv
+.venv/
+venv/
+env/son

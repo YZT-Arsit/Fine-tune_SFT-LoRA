@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 from typing import Any
@@ -82,16 +83,18 @@ def merge_lora_adapter(
     resolved_device_map: str | dict[str, Any] = device_map
     if device_map == "cpu":
         resolved_device_map = {"": "cpu"}
+    resolved_base_model, local_files_only = resolve_model_path(base_model)
 
     tokenizer = AutoTokenizer.from_pretrained(str(adapter_path), trust_remote_code=True)
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
 
     base = AutoModelForCausalLM.from_pretrained(
-        base_model,
+        resolved_base_model,
         trust_remote_code=True,
         torch_dtype=torch_dtype,
         device_map=resolved_device_map,
+        local_files_only=local_files_only,
     )
     peft_model = PeftModel.from_pretrained(base, str(adapter_path))
     merged = peft_model.merge_and_unload()
@@ -105,6 +108,7 @@ def merge_lora_adapter(
 
     merge_meta = {
         "base_model": base_model,
+        "resolved_base_model": resolved_base_model,
         "adapter_dir": str(adapter_path),
         "output_dir": str(out_path),
         "dtype": str(torch_dtype),
@@ -117,6 +121,13 @@ def merge_lora_adapter(
         encoding="utf-8",
     )
     return merge_meta
+
+
+def resolve_model_path(model_name_or_path: str) -> tuple[str, bool]:
+    raw_path = Path(model_name_or_path).expanduser()
+    if raw_path.exists():
+        return str(_find_local_model_dir(raw_path)), True
+    return model_name_or_path, _env_truthy("HF_HUB_OFFLINE") or _env_truthy("TRANSFORMERS_OFFLINE")
 
 
 def resolve_adapter_dir(path: Path) -> Path:
@@ -168,6 +179,21 @@ def _collect_adapter_candidates(path: Path) -> list[Path]:
     return _dedup_paths(candidates)
 
 
+def _find_local_model_dir(path: Path) -> Path:
+    direct_markers = ["config.json", "tokenizer_config.json", "tokenizer.json"]
+    if any((path / marker).exists() for marker in direct_markers):
+        return path
+
+    snapshot_dirs = [p for p in path.rglob("*") if p.is_dir() and (p / "config.json").exists()]
+    if not snapshot_dirs:
+        raise FileNotFoundError(
+            "Local base model path exists but no Hugging Face-compatible model files were found under "
+            f"{path}. Expected config.json/tokenizer files."
+        )
+    preferred = sorted(snapshot_dirs, key=lambda p: (0 if "snapshots" in p.parts else 1, len(p.parts)))
+    return preferred[0]
+
+
 def _is_adapter_dir(path: Path) -> bool:
     return path.is_dir() and (path / "adapter_config.json").exists()
 
@@ -190,6 +216,10 @@ def _dedup_paths(paths: list[Path]) -> list[Path]:
         seen.add(key)
         ordered.append(path)
     return ordered
+
+
+def _env_truthy(name: str) -> bool:
+    return os.getenv(name, "").strip().lower() in {"1", "true", "yes", "on"}
 
 
 def main() -> None:

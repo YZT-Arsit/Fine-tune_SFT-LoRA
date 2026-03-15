@@ -52,6 +52,8 @@ class TrainRuntimeConfig:
     seed: int
     max_steps: int
     assistant_only_loss: bool
+    resolved_model_path: str
+    local_files_only: bool
 
 
 def load_jsonl_dataset(path: str) -> list[dict[str, Any]]:
@@ -62,6 +64,14 @@ def load_jsonl_dataset(path: str) -> list[dict[str, Any]]:
     if not rows:
         raise ValueError(f"Dataset is empty: {file_path}")
     return rows
+
+
+def resolve_model_path(model_name_or_path: str) -> tuple[str, bool]:
+    raw_path = Path(model_name_or_path).expanduser()
+    if raw_path.exists():
+        resolved = _find_local_model_dir(raw_path)
+        return str(resolved), True
+    return model_name_or_path, _env_truthy("HF_HUB_OFFLINE") or _env_truthy("TRANSFORMERS_OFFLINE")
 
 
 def format_example(example: dict[str, Any], include_answer: bool = True) -> str:
@@ -90,7 +100,13 @@ def build_tokenizer(model_name_or_path: str):
     except ImportError as exc:
         raise RuntimeError("transformers is required for training. Install requirements-lora.txt.") from exc
 
-    tokenizer = AutoTokenizer.from_pretrained(model_name_or_path, trust_remote_code=True, use_fast=False)
+    resolved_model_path, local_files_only = resolve_model_path(model_name_or_path)
+    tokenizer = AutoTokenizer.from_pretrained(
+        resolved_model_path,
+        trust_remote_code=True,
+        use_fast=False,
+        local_files_only=local_files_only,
+    )
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
     tokenizer.padding_side = "right"
@@ -106,6 +122,7 @@ def build_model_and_peft_config(args: argparse.Namespace):
 
     bf16_supported = torch.cuda.is_available() and torch.cuda.is_bf16_supported()
     preferred_dtype = torch.bfloat16 if bf16_supported else torch.float16
+    resolved_model_path, local_files_only = resolve_model_path(args.model_name_or_path)
 
     quantization_config = None
     if args.mode == "qlora":
@@ -117,11 +134,12 @@ def build_model_and_peft_config(args: argparse.Namespace):
         )
 
     model = AutoModelForCausalLM.from_pretrained(
-        args.model_name_or_path,
+        resolved_model_path,
         trust_remote_code=True,
         quantization_config=quantization_config,
         torch_dtype=preferred_dtype if args.mode == "lora" else None,
         device_map="auto",
+        local_files_only=local_files_only,
     )
 
     if args.mode == "qlora":
@@ -140,7 +158,7 @@ def build_model_and_peft_config(args: argparse.Namespace):
         task_type="CAUSAL_LM",
         target_modules=target_modules,
     )
-    return model, peft_config, bf16_supported
+    return model, peft_config, bf16_supported, resolved_model_path, local_files_only
 
 
 def build_trainer(
@@ -234,11 +252,13 @@ def run_generation_eval(args: argparse.Namespace, tokenizer) -> dict[str, Any]:
 
     bf16_supported = torch.cuda.is_available() and torch.cuda.is_bf16_supported()
     preferred_dtype = torch.bfloat16 if bf16_supported else torch.float16
+    resolved_model_path, local_files_only = resolve_model_path(args.model_name_or_path)
     base_model = AutoModelForCausalLM.from_pretrained(
-        args.model_name_or_path,
+        resolved_model_path,
         trust_remote_code=True,
         torch_dtype=preferred_dtype,
         device_map="auto",
+        local_files_only=local_files_only,
     )
     model = PeftModel.from_pretrained(base_model, str(final_adapter_dir))
     model.eval()
@@ -379,7 +399,7 @@ def main() -> None:
     train_rows = load_jsonl_dataset(args.train_file)
     val_rows = load_jsonl_dataset(args.val_file)
     tokenizer = build_tokenizer(args.model_name_or_path)
-    model, peft_config, bf16_supported = build_model_and_peft_config(args)
+    model, peft_config, bf16_supported, resolved_model_path, local_files_only = build_model_and_peft_config(args)
 
     trainer, assistant_only_loss_active = build_trainer(
         args=args,
@@ -442,6 +462,8 @@ def main() -> None:
         seed=args.seed,
         max_steps=args.max_steps,
         assistant_only_loss=args.assistant_only_loss,
+        resolved_model_path=resolved_model_path,
+        local_files_only=local_files_only,
     )
     config_dump = asdict(runtime_config)
     config_dump["bf16_supported"] = bf16_supported
@@ -468,6 +490,7 @@ def main() -> None:
             {
                 "output_dir": str(output_dir),
                 "final_adapter_dir": str(final_adapter_dir),
+                "resolved_model_path": resolved_model_path,
                 "train_samples": len(train_rows),
                 "val_samples": len(val_rows),
                 "assistant_only_loss_active": assistant_only_loss_active,
@@ -483,6 +506,26 @@ def _sample_id(idx: int, gt: dict[str, Any]) -> str:
     if isinstance(upc, str) and upc:
         return upc
     return str(idx)
+
+
+def _find_local_model_dir(path: Path) -> Path:
+    direct_markers = ["config.json", "tokenizer_config.json", "tokenizer.json"]
+    if any((path / marker).exists() for marker in direct_markers):
+        return path
+
+    snapshot_dirs = [p for p in path.rglob("*") if p.is_dir() and (p / "config.json").exists()]
+    if not snapshot_dirs:
+        raise FileNotFoundError(
+            "Local model path exists but no Hugging Face-compatible model files were found under "
+            f"{path}. Expected config.json/tokenizer files."
+        )
+
+    preferred = sorted(snapshot_dirs, key=lambda p: (0 if "snapshots" in p.parts else 1, len(p.parts)))
+    return preferred[0]
+
+
+def _env_truthy(name: str) -> bool:
+    return os.getenv(name, "").strip().lower() in {"1", "true", "yes", "on"}
 
 
 if __name__ == "__main__":

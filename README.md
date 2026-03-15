@@ -217,6 +217,7 @@ pip install -r requirements-lora.txt
 python -m src.train_lora \
   --train_file outputs/sft/train.jsonl \
   --val_file outputs/sft/val.jsonl \
+  --model_name_or_path /root/.cache/modelscope/hub/models/Qwen/Qwen2.5-7B-Instruct \
   --output_dir checkpoints/lora_qwen2.5_7b \
   --mode qlora
 ```
@@ -227,11 +228,14 @@ python -m src.train_lora \
 python -m src.train_lora \
   --train_file outputs/sft/train.jsonl \
   --val_file outputs/sft/val.jsonl \
+  --model_name_or_path /root/.cache/modelscope/hub/models/Qwen/Qwen2.5-7B-Instruct \
   --output_dir checkpoints/lora_qwen2.5_7b \
   --mode qlora \
   --do_generation_eval \
   --max_eval_samples 50
 ```
+
+如果模型是通过 ModelScope 下载的，可以直接把本地目录传给 `--model_name_or_path`。脚本会自动在该目录下查找 `config.json` 所在的真实模型目录，并以离线模式加载。
 
 ### 合并 LoRA Adapter
 
@@ -239,7 +243,7 @@ python -m src.train_lora \
 
 ```bash
 python -m src.merge_lora \
-  --base_model Qwen/Qwen2.5-7B-Instruct \
+  --base_model /root/.cache/modelscope/hub/models/Qwen/Qwen2.5-7B-Instruct \
   --adapter_dir checkpoints/lora_qwen2.5_7b/final_adapter \
   --output_dir checkpoints/lora_qwen2.5_7b/merged_model \
   --dtype auto

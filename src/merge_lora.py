@@ -15,7 +15,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--adapter_dir",
         required=True,
-        help="LoRA adapter directory, e.g. checkpoints/lora_qwen2.5_7b/final_adapter",
+        help="LoRA adapter directory or training output directory, e.g. checkpoints/lora_qwen2.5_7b/final_adapter or checkpoints/lora_qwen2.5_7b",
     )
     parser.add_argument("--output_dir", required=True, help="Merged model output directory")
     parser.add_argument(
@@ -73,9 +73,7 @@ def merge_lora_adapter(
     except ImportError as exc:
         raise RuntimeError("transformers/peft are required. Install requirements-lora.txt first.") from exc
 
-    adapter_path = Path(adapter_dir)
-    if not adapter_path.exists():
-        raise FileNotFoundError(f"Adapter directory not found: {adapter_path}")
+    adapter_path = resolve_adapter_dir(Path(adapter_dir))
 
     out_path = Path(output_dir)
     out_path.mkdir(parents=True, exist_ok=True)
@@ -119,6 +117,79 @@ def merge_lora_adapter(
         encoding="utf-8",
     )
     return merge_meta
+
+
+def resolve_adapter_dir(path: Path) -> Path:
+    candidates = _collect_adapter_candidates(path)
+    if candidates:
+        return candidates[0]
+
+    message = [
+        f"Adapter directory not found or does not contain adapter files: {path}",
+        "Expected one of these layouts:",
+        f"  - {path}/adapter_config.json",
+        f"  - {path}/final_adapter/adapter_config.json",
+        f"  - {path}/checkpoint-*/adapter_config.json",
+    ]
+    if path.parent.exists():
+        sibling_candidates = _collect_adapter_candidates(path.parent)
+        if sibling_candidates:
+            message.append("Found nearby adapter candidates:")
+            for candidate in sibling_candidates[:5]:
+                message.append(f"  - {candidate}")
+    message.append("If training has not finished, you can also merge from the latest checkpoint directory.")
+    raise FileNotFoundError("\n".join(message))
+
+
+def _collect_adapter_candidates(path: Path) -> list[Path]:
+    candidates: list[Path] = []
+    if not path.exists():
+        return candidates
+
+    if _is_adapter_dir(path):
+        candidates.append(path)
+
+    final_adapter = path / "final_adapter"
+    if _is_adapter_dir(final_adapter):
+        candidates.append(final_adapter)
+
+    checkpoint_dirs = sorted(
+        [child for child in path.glob("checkpoint-*") if child.is_dir()],
+        key=_checkpoint_sort_key,
+        reverse=True,
+    )
+    for checkpoint_dir in checkpoint_dirs:
+        if _is_adapter_dir(checkpoint_dir):
+            candidates.append(checkpoint_dir)
+        adapter_subdir = checkpoint_dir / "final_adapter"
+        if _is_adapter_dir(adapter_subdir):
+            candidates.append(adapter_subdir)
+
+    return _dedup_paths(candidates)
+
+
+def _is_adapter_dir(path: Path) -> bool:
+    return path.is_dir() and (path / "adapter_config.json").exists()
+
+
+def _checkpoint_sort_key(path: Path) -> tuple[int, str]:
+    suffix = path.name.split("checkpoint-", 1)[-1]
+    try:
+        return int(suffix), path.name
+    except ValueError:
+        return -1, path.name
+
+
+def _dedup_paths(paths: list[Path]) -> list[Path]:
+    seen: set[str] = set()
+    ordered: list[Path] = []
+    for path in paths:
+        key = str(path.resolve())
+        if key in seen:
+            continue
+        seen.add(key)
+        ordered.append(path)
+    return ordered
 
 
 def main() -> None:

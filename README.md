@@ -245,6 +245,11 @@ python -m src.merge_lora \
   --dtype auto
 ```
 
+也可以直接把训练输出目录传给 `--adapter_dir`，脚本会优先自动查找：
+
+- `final_adapter/`
+- 最新的 `checkpoint-*`
+
 ### `stats`
 
 - `--in`: 输入的结构化商品 JSONL

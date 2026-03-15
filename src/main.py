@@ -10,8 +10,10 @@ from typing import Any
 
 from .baseline import run_baseline
 from .build_sft import build_sft_dataset
+from .compare_eval_reports import compare_reports, write_markdown_summary
 from .config import RuntimeConfig, ensure_output_dirs
 from .env_loader import load_project_env
+from .eval_lora_model import run_lora_eval
 from .fetch import Fetcher, RobotsBlockedError
 from .parse_detail import parse_product_detail
 from .parse_list import parse_list_page
@@ -30,6 +32,10 @@ def main() -> None:
         handle_build_sft(args)
     elif args.command == "baseline":
         handle_baseline(args)
+    elif args.command == "lora_eval":
+        handle_lora_eval(args)
+    elif args.command == "compare_eval":
+        handle_compare_eval(args)
     elif args.command == "stats":
         handle_stats(args)
     else:
@@ -304,6 +310,62 @@ def handle_baseline(args: argparse.Namespace) -> None:
     )
 
 
+def handle_lora_eval(args: argparse.Namespace) -> None:
+    report = run_lora_eval(args)
+    logger = setup_logger(_build_lora_eval_log_path(Path(args.report_out)), "lora_eval")
+    logger.info(
+        "lora_eval completed model=%s evaluated=%s json_parse_rate=%s schema_valid_rate=%s",
+        report["model_name"],
+        report["total_evaluated"],
+        report["json_parse_rate"],
+        report["schema_valid_rate"],
+    )
+    print(
+        json.dumps(
+            {
+                "val": args.val_file,
+                "pred_out": report["pred_out"],
+                "report_out": args.report_out,
+                "model_name": report["model_name"],
+                "json_parse_rate": report["json_parse_rate"],
+                "schema_valid_rate": report["schema_valid_rate"],
+                "total_evaluated": report["total_evaluated"],
+            },
+            ensure_ascii=False,
+        )
+    )
+
+
+def handle_compare_eval(args: argparse.Namespace) -> None:
+    comparison = compare_reports(Path(args.baseline_report), Path(args.lora_report))
+    comparison_path = Path(args.out)
+    comparison_path.parent.mkdir(parents=True, exist_ok=True)
+    comparison_path.write_text(
+        json.dumps(comparison, ensure_ascii=False, indent=2, sort_keys=True),
+        encoding="utf-8",
+    )
+    write_markdown_summary(Path(args.md_out), comparison)
+    logger = setup_logger(_build_compare_eval_log_path(comparison_path), "compare_eval")
+    logger.info(
+        "compare_eval completed baseline=%s lora=%s json_parse_delta=%s schema_delta=%s",
+        comparison["baseline_model"],
+        comparison["lora_model"],
+        comparison["headline_metrics"]["json_parse_rate"]["delta"],
+        comparison["headline_metrics"]["schema_valid_rate"]["delta"],
+    )
+    print(
+        json.dumps(
+            {
+                "comparison_out": str(comparison_path),
+                "markdown_out": args.md_out,
+                "baseline_model": comparison["baseline_model"],
+                "lora_model": comparison["lora_model"],
+            },
+            ensure_ascii=False,
+        )
+    )
+
+
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Books to Scrape data pipeline")
     subparsers = parser.add_subparsers(dest="command")
@@ -397,6 +459,34 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Maximum generation tokens",
     )
 
+    lora_eval = subparsers.add_parser("lora_eval", help="Evaluate LoRA adapter or merged model on validation set")
+    lora_eval.add_argument("--val_file", default="outputs/sft/val.jsonl")
+    lora_eval.add_argument("--model_path", default=None, help="Merged model directory")
+    lora_eval.add_argument("--base_model", default="Qwen/Qwen2.5-7B-Instruct")
+    lora_eval.add_argument("--adapter_dir", default=None, help="Adapter directory or training output directory")
+    lora_eval.add_argument(
+        "--pred_out",
+        default="outputs/lora_eval/val_predictions.jsonl",
+        help="LoRA predictions JSONL output path",
+    )
+    lora_eval.add_argument(
+        "--report_out",
+        default="outputs/lora_eval/val_generation_report.json",
+        help="LoRA evaluation report output path",
+    )
+    lora_eval.add_argument("--max_eval_samples", type=int, default=0, help="0 means evaluate all validation samples")
+    lora_eval.add_argument("--max_new_tokens", type=int, default=256)
+    lora_eval.add_argument("--temperature", type=float, default=0.0)
+    lora_eval.add_argument("--top_p", type=float, default=1.0)
+    lora_eval.add_argument("--dtype", choices=["auto", "bf16", "fp16", "fp32"], default="auto")
+    lora_eval.add_argument("--device_map", default="auto")
+
+    compare_eval = subparsers.add_parser("compare_eval", help="Compare baseline and LoRA evaluation reports")
+    compare_eval.add_argument("--baseline_report", default="outputs/baseline/baseline_eval_report.json")
+    compare_eval.add_argument("--lora_report", default="outputs/lora_eval/val_generation_report.json")
+    compare_eval.add_argument("--out", default="outputs/analysis/model_comparison.json")
+    compare_eval.add_argument("--md_out", default="outputs/analysis/model_comparison.md")
+
     stats = subparsers.add_parser("stats", help="Show dataset statistics")
     stats.add_argument("--in", dest="input", required=True, help="Input parsed JSONL")
 
@@ -437,6 +527,18 @@ def _build_baseline_log_path(report_path: Path) -> Path:
     if report_path.parent.name == "baseline":
         return report_path.parent.parent / "logs" / "baseline.log"
     return report_path.parent / "logs" / "baseline.log"
+
+
+def _build_lora_eval_log_path(report_path: Path) -> Path:
+    if report_path.parent.name == "lora_eval":
+        return report_path.parent.parent / "logs" / "lora_eval.log"
+    return report_path.parent / "logs" / "lora_eval.log"
+
+
+def _build_compare_eval_log_path(report_path: Path) -> Path:
+    if report_path.parent.name == "analysis":
+        return report_path.parent.parent / "logs" / "compare_eval.log"
+    return report_path.parent / "logs" / "compare_eval.log"
 
 
 def _is_missing(value: Any) -> bool:

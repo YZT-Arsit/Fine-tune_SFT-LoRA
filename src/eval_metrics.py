@@ -6,6 +6,31 @@ from collections import Counter
 from typing import Any
 
 
+FIELD_PATHS: dict[str, tuple[str, ...]] = {
+    "title": ("title",),
+    "category": ("category",),
+    "price": ("price",),
+    "currency": ("currency",),
+    "availability.in_stock": ("availability", "in_stock"),
+    "availability.stock_count": ("availability", "stock_count"),
+    "rating": ("rating",),
+    "key_attributes.upc": ("key_attributes", "upc"),
+    "key_attributes.product_type": ("key_attributes", "product_type"),
+    "key_attributes.price_excl_tax": ("key_attributes", "price_excl_tax"),
+    "key_attributes.price_incl_tax": ("key_attributes", "price_incl_tax"),
+    "key_attributes.tax": ("key_attributes", "tax"),
+    "key_attributes.availability_text": ("key_attributes", "availability_text"),
+    "key_attributes.review_count": ("key_attributes", "review_count"),
+}
+
+NUMERIC_FIELD_PATHS: dict[str, tuple[str, ...]] = {
+    "price": ("price",),
+    "key_attributes.price_excl_tax": ("key_attributes", "price_excl_tax"),
+    "key_attributes.price_incl_tax": ("key_attributes", "price_incl_tax"),
+    "key_attributes.tax": ("key_attributes", "tax"),
+}
+
+
 def parse_json_object(raw_text: str) -> tuple[dict[str, Any] | None, str | None]:
     text = (raw_text or "").strip()
     if not text:
@@ -90,16 +115,8 @@ def evaluate_prediction_rows(rows: list[dict[str, Any]]) -> dict[str, Any]:
     total = len(rows)
     parse_ok_count = sum(1 for row in rows if row["parse_ok"])
     schema_ok_count = sum(1 for row in rows if row["schema_ok"])
-
-    title_matches = 0
-    category_matches = 0
-    in_stock_matches = 0
-    stock_count_matches = 0
-    upc_matches = 0
-
-    price_errors: list[float] = []
-    price_excl_tax_errors: list[float] = []
-    tax_errors: list[float] = []
+    field_match_counts = {field_name: 0 for field_name in FIELD_PATHS}
+    numeric_errors = {field_name: [] for field_name in NUMERIC_FIELD_PATHS}
     failure_reasons = Counter()
     sample_badcases: list[dict[str, Any]] = []
 
@@ -121,39 +138,48 @@ def evaluate_prediction_rows(rows: list[dict[str, Any]]) -> dict[str, Any]:
         if not isinstance(pred, dict):
             continue
 
-        title_matches += pred.get("title") == gt.get("title")
-        category_matches += pred.get("category") == gt.get("category")
+        for field_name, path in FIELD_PATHS.items():
+            if _get_nested(pred, path) == _get_nested(gt, path):
+                field_match_counts[field_name] += 1
 
-        pred_availability = pred.get("availability") or {}
-        gt_availability = gt.get("availability") or {}
-        in_stock_matches += pred_availability.get("in_stock") == gt_availability.get("in_stock")
-        stock_count_matches += pred_availability.get("stock_count") == gt_availability.get("stock_count")
+        for field_name, path in NUMERIC_FIELD_PATHS.items():
+            _append_abs_error(numeric_errors[field_name], _get_nested(pred, path), _get_nested(gt, path))
 
-        pred_key = pred.get("key_attributes") or {}
-        gt_key = gt.get("key_attributes") or {}
-        upc_matches += pred_key.get("upc") == gt_key.get("upc")
-
-        _append_abs_error(price_errors, pred.get("price"), gt.get("price"))
-        _append_abs_error(price_excl_tax_errors, pred_key.get("price_excl_tax"), gt_key.get("price_excl_tax"))
-        _append_abs_error(tax_errors, pred_key.get("tax"), gt_key.get("tax"))
+    field_accuracy = {
+        "title_exact_match_rate": _safe_rate(field_match_counts["title"], total),
+        "category_exact_match_rate": _safe_rate(field_match_counts["category"], total),
+        "price_exact_match_rate": _safe_rate(field_match_counts["price"], total),
+        "currency_match_rate": _safe_rate(field_match_counts["currency"], total),
+        "in_stock_match_rate": _safe_rate(field_match_counts["availability.in_stock"], total),
+        "stock_count_match_rate": _safe_rate(field_match_counts["availability.stock_count"], total),
+        "rating_match_rate": _safe_rate(field_match_counts["rating"], total),
+        "upc_match_rate": _safe_rate(field_match_counts["key_attributes.upc"], total),
+        "product_type_match_rate": _safe_rate(field_match_counts["key_attributes.product_type"], total),
+        "price_excl_tax_exact_match_rate": _safe_rate(field_match_counts["key_attributes.price_excl_tax"], total),
+        "price_incl_tax_exact_match_rate": _safe_rate(field_match_counts["key_attributes.price_incl_tax"], total),
+        "tax_exact_match_rate": _safe_rate(field_match_counts["key_attributes.tax"], total),
+        "availability_text_match_rate": _safe_rate(field_match_counts["key_attributes.availability_text"], total),
+        "review_count_match_rate": _safe_rate(field_match_counts["key_attributes.review_count"], total),
+    }
 
     return {
         "total_samples": total,
         "json_parse_rate": _safe_rate(parse_ok_count, total),
         "schema_valid_rate": _safe_rate(schema_ok_count, total),
-        "field_accuracy": {
-            "title_exact_match_rate": _safe_rate(title_matches, total),
-            "category_exact_match_rate": _safe_rate(category_matches, total),
-            "in_stock_match_rate": _safe_rate(in_stock_matches, total),
-            "stock_count_match_rate": _safe_rate(stock_count_matches, total),
-            "upc_match_rate": _safe_rate(upc_matches, total),
-        },
+        "field_accuracy": field_accuracy,
         "numeric_error": {
-            "price_abs_error_avg": _avg(price_errors),
-            "price_abs_error_p50": _percentile(price_errors, 50),
-            "price_abs_error_p95": _percentile(price_errors, 95),
-            "price_excl_tax_abs_error_avg": _avg(price_excl_tax_errors),
-            "tax_abs_error_avg": _avg(tax_errors),
+            "price_abs_error_avg": _avg(numeric_errors["price"]),
+            "price_abs_error_p50": _percentile(numeric_errors["price"], 50),
+            "price_abs_error_p95": _percentile(numeric_errors["price"], 95),
+            "price_excl_tax_abs_error_avg": _avg(numeric_errors["key_attributes.price_excl_tax"]),
+            "price_excl_tax_abs_error_p50": _percentile(numeric_errors["key_attributes.price_excl_tax"], 50),
+            "price_excl_tax_abs_error_p95": _percentile(numeric_errors["key_attributes.price_excl_tax"], 95),
+            "price_incl_tax_abs_error_avg": _avg(numeric_errors["key_attributes.price_incl_tax"]),
+            "price_incl_tax_abs_error_p50": _percentile(numeric_errors["key_attributes.price_incl_tax"], 50),
+            "price_incl_tax_abs_error_p95": _percentile(numeric_errors["key_attributes.price_incl_tax"], 95),
+            "tax_abs_error_avg": _avg(numeric_errors["key_attributes.tax"]),
+            "tax_abs_error_p50": _percentile(numeric_errors["key_attributes.tax"], 50),
+            "tax_abs_error_p95": _percentile(numeric_errors["key_attributes.tax"], 95),
         },
         "failure_reasons_top10": failure_reasons.most_common(10),
         "sample_badcases": sample_badcases,
@@ -192,3 +218,12 @@ def _is_number(value: Any) -> bool:
 
 def _is_int(value: Any) -> bool:
     return isinstance(value, int) and not isinstance(value, bool)
+
+
+def _get_nested(payload: dict[str, Any], path: tuple[str, ...]) -> Any:
+    current: Any = payload
+    for key in path:
+        if not isinstance(current, dict):
+            return None
+        current = current.get(key)
+    return current

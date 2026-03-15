@@ -254,6 +254,64 @@ python -m src.merge_lora \
 - `final_adapter/`
 - 最新的 `checkpoint-*`
 
+## LoRA 独立评测与对比
+
+为了形成可量化、可复现的面试闭环，建议在训练完成后单独执行验证集评测，再与 baseline 同口径对比。
+
+1) 评测 LoRA adapter 或 merged model：
+
+```bash
+python -m src.main lora_eval \
+  --val_file outputs/sft/val.jsonl \
+  --base_model /root/.cache/modelscope/hub/models/Qwen/Qwen2.5-7B-Instruct \
+  --adapter_dir checkpoints/lora_qwen2.5_7b \
+  --pred_out outputs/lora_eval/val_predictions.jsonl \
+  --report_out outputs/lora_eval/val_generation_report.json
+```
+
+如果你已经完成合并，也可以直接评 merged model：
+
+```bash
+python -m src.main lora_eval \
+  --val_file outputs/sft/val.jsonl \
+  --model_path checkpoints/lora_qwen2.5_7b/merged_model \
+  --pred_out outputs/lora_eval/val_predictions.jsonl \
+  --report_out outputs/lora_eval/val_generation_report.json
+```
+
+2) 生成 baseline vs LoRA 对比报告：
+
+```bash
+python -m src.main compare_eval \
+  --baseline_report outputs/baseline/baseline_eval_report.json \
+  --lora_report outputs/lora_eval/val_generation_report.json \
+  --out outputs/analysis/model_comparison.json \
+  --md_out outputs/analysis/model_comparison.md
+```
+
+输出：
+
+- `outputs/lora_eval/val_predictions.jsonl`
+- `outputs/lora_eval/val_generation_report.json`
+- `outputs/analysis/model_comparison.json`
+- `outputs/analysis/model_comparison.md`
+
+建议在面试中重点展示这些指标：
+
+- `json_parse_rate`
+- `schema_valid_rate`
+- `field_accuracy` 中的 `title/category/upc/rating/review_count`
+- `numeric_error` 中的 `price/tax/price_excl_tax`
+
+这样可以形成完整故事：
+
+- 先用基座模型建立 baseline
+- 用 badcase 分析定位问题
+- 做数据治理和增强
+- 用 QLoRA 微调
+- 用统一验证集做 baseline vs LoRA 的同口径对比
+- 以 JSON 可解析率、Schema 合法率、字段准确率、数值误差作为量化结论
+
 ### `stats`
 
 - `--in`: 输入的结构化商品 JSONL

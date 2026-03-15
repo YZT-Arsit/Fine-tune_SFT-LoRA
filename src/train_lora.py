@@ -1,15 +1,18 @@
 from __future__ import annotations
 
 import argparse
+import inspect
 import json
 import os
 import random
 import sys
+import warnings
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
 
 import torch
+import torch.nn.functional as F
 
 from .eval_metrics import evaluate_prediction_rows, parse_json_object, validate_prediction_schema
 from .storage import load_jsonl, write_jsonl
@@ -54,6 +57,7 @@ class TrainRuntimeConfig:
     assistant_only_loss: bool
     resolved_model_path: str
     local_files_only: bool
+    trainer_backend: str
 
 
 def load_jsonl_dataset(path: str) -> list[dict[str, Any]]:
@@ -115,7 +119,7 @@ def build_tokenizer(model_name_or_path: str):
 
 def build_model_and_peft_config(args: argparse.Namespace):
     try:
-        from peft import LoraConfig, prepare_model_for_kbit_training
+        from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
         from transformers import AutoModelForCausalLM, BitsAndBytesConfig
     except ImportError as exc:
         raise RuntimeError("peft/transformers is required for LoRA training. Install requirements-lora.txt.") from exc
@@ -158,6 +162,7 @@ def build_model_and_peft_config(args: argparse.Namespace):
         task_type="CAUSAL_LM",
         target_modules=target_modules,
     )
+    model = get_peft_model(model, peft_config)
     return model, peft_config, bf16_supported, resolved_model_path, local_files_only
 
 
@@ -171,13 +176,9 @@ def build_trainer(
 ):
     try:
         from datasets import Dataset
-        from transformers import TrainingArguments
-        from trl import SFTTrainer
+        from transformers import DataCollatorForSeq2Seq, Trainer, TrainingArguments
     except ImportError as exc:
-        raise RuntimeError("trl/datasets/transformers is required. Install requirements-lora.txt.") from exc
-
-    train_ds = Dataset.from_list([{"text": format_example(row, include_answer=True)} for row in train_rows])
-    val_ds = Dataset.from_list([{"text": format_example(row, include_answer=True)} for row in val_rows])
+        raise RuntimeError("datasets/transformers is required. Install requirements-lora.txt.") from exc
 
     bf16_supported = torch.cuda.is_available() and torch.cuda.is_bf16_supported()
     fp16_enabled = not bf16_supported
@@ -191,7 +192,6 @@ def build_trainer(
         max_steps=args.max_steps,
         warmup_ratio=args.warmup_ratio,
         logging_steps=args.logging_steps,
-        evaluation_strategy="steps",
         eval_steps=args.eval_steps,
         save_steps=args.save_steps,
         save_total_limit=args.save_total_limit,
@@ -203,41 +203,151 @@ def build_trainer(
         report_to="none",
         load_best_model_at_end=False,
         gradient_checkpointing=args.gradient_checkpointing,
+        **_build_training_strategy_kwargs(TrainingArguments),
     )
 
-    data_collator = None
+    train_tokenized = Dataset.from_list(
+        [_tokenize_supervised_example(row, tokenizer, args.max_seq_length, args.assistant_only_loss) for row in train_rows]
+    )
+    val_tokenized = Dataset.from_list(
+        [_tokenize_supervised_example(row, tokenizer, args.max_seq_length, args.assistant_only_loss) for row in val_rows]
+    )
+
+    data_collator = DataCollatorForSeq2Seq(
+        tokenizer=tokenizer,
+        model=model,
+        padding=True,
+        pad_to_multiple_of=8,
+        label_pad_token_id=-100,
+        return_tensors="pt",
+    )
     assistant_only_loss_active = False
     if args.assistant_only_loss:
-        # If this collator is available, only assistant span tokens contribute to loss.
-        # Otherwise we fall back to full causal LM loss over the whole prompt.
-        try:
-            from trl import DataCollatorForCompletionOnlyLM
+        assistant_only_loss_active = True
 
-            data_collator = DataCollatorForCompletionOnlyLM(
-                response_template="<|im_start|>assistant\n",
-                tokenizer=tokenizer,
-            )
-            assistant_only_loss_active = True
-        except Exception:
-            assistant_only_loss_active = False
-
-    trainer_kwargs = dict(
+    trainer = _build_standard_trainer(
         model=model,
-        args=training_args,
-        train_dataset=train_ds,
-        eval_dataset=val_ds,
-        peft_config=peft_config,
-        max_seq_length=args.max_seq_length,
-        dataset_text_field="text",
+        training_args=training_args,
+        train_dataset=train_tokenized,
+        eval_dataset=val_tokenized,
         data_collator=data_collator,
+        tokenizer=tokenizer,
     )
 
-    try:
-        trainer = SFTTrainer(processing_class=tokenizer, **trainer_kwargs)
-    except TypeError:
-        trainer = SFTTrainer(tokenizer=tokenizer, **trainer_kwargs)
+    # We intentionally use standard Trainer here. It is more stable across
+    # transformers/trl version combinations than SFTTrainer in this environment.
+    return trainer, assistant_only_loss_active, "transformers_trainer"
 
-    return trainer, assistant_only_loss_active
+
+def _build_training_strategy_kwargs(training_args_cls: type) -> dict[str, Any]:
+    signature = inspect.signature(training_args_cls.__init__)
+    params = signature.parameters
+    kwargs: dict[str, Any] = {}
+
+    if "evaluation_strategy" in params:
+        kwargs["evaluation_strategy"] = "steps"
+    elif "eval_strategy" in params:
+        kwargs["eval_strategy"] = "steps"
+
+    if "save_strategy" in params:
+        kwargs["save_strategy"] = "steps"
+
+    if "logging_strategy" in params:
+        kwargs["logging_strategy"] = "steps"
+
+    return kwargs
+
+
+def _resolve_trainer_base():
+    from transformers import Trainer
+
+    return Trainer
+
+
+def _build_standard_trainer(
+    *,
+    model,
+    training_args,
+    train_dataset,
+    eval_dataset,
+    data_collator,
+    tokenizer,
+):
+    trainer_base = _resolve_trainer_base()
+
+    class CausalLMTrainer(trainer_base):
+        def compute_loss(self, model, inputs, return_outputs=False, **kwargs):
+            labels = inputs.get("labels")
+            outputs = model(
+                input_ids=inputs["input_ids"],
+                attention_mask=inputs.get("attention_mask"),
+                use_cache=False,
+            )
+            logits = outputs.get("logits") if isinstance(outputs, dict) else outputs.logits
+            if labels is None:
+                raise ValueError("labels are required for supervised fine-tuning")
+
+            shift_logits = logits[..., :-1, :].contiguous()
+            shift_labels = labels[..., 1:].contiguous()
+            loss = F.cross_entropy(
+                shift_logits.view(-1, shift_logits.size(-1)),
+                shift_labels.view(-1),
+                ignore_index=-100,
+            )
+            if return_outputs:
+                return loss, outputs
+            return loss
+
+    trainer_signature = inspect.signature(trainer_base.__init__)
+    trainer_kwargs = {
+        "model": model,
+        "args": training_args,
+        "train_dataset": train_dataset,
+        "eval_dataset": eval_dataset,
+        "data_collator": data_collator,
+    }
+    if "processing_class" in trainer_signature.parameters:
+        trainer_kwargs["processing_class"] = tokenizer
+    elif "tokenizer" in trainer_signature.parameters:
+        trainer_kwargs["tokenizer"] = tokenizer
+
+    return CausalLMTrainer(**trainer_kwargs)
+
+
+def _tokenize_supervised_example(
+    example: dict[str, Any],
+    tokenizer,
+    max_seq_length: int,
+    assistant_only_loss: bool,
+) -> dict[str, Any]:
+    full_text = format_example(example, include_answer=True)
+    prompt_text = format_example(example, include_answer=False)
+
+    full_tokens = tokenizer(
+        full_text,
+        truncation=True,
+        max_length=max_seq_length,
+        add_special_tokens=False,
+    )
+    prompt_tokens = tokenizer(
+        prompt_text,
+        truncation=True,
+        max_length=max_seq_length,
+        add_special_tokens=False,
+    )
+
+    input_ids = list(full_tokens["input_ids"])
+    attention_mask = list(full_tokens["attention_mask"])
+    labels = list(input_ids)
+    if assistant_only_loss:
+        prompt_len = min(len(prompt_tokens["input_ids"]), len(labels))
+        labels[:prompt_len] = [-100] * prompt_len
+
+    return {
+        "input_ids": input_ids,
+        "attention_mask": attention_mask,
+        "labels": labels,
+    }
 
 
 def run_generation_eval(args: argparse.Namespace, tokenizer) -> dict[str, Any]:
@@ -401,7 +511,7 @@ def main() -> None:
     tokenizer = build_tokenizer(args.model_name_or_path)
     model, peft_config, bf16_supported, resolved_model_path, local_files_only = build_model_and_peft_config(args)
 
-    trainer, assistant_only_loss_active = build_trainer(
+    trainer, assistant_only_loss_active, trainer_backend = build_trainer(
         args=args,
         model=model,
         tokenizer=tokenizer,
@@ -413,6 +523,7 @@ def main() -> None:
     train_result = trainer.train()
     train_metrics = dict(train_result.metrics)
     train_metrics["assistant_only_loss_active"] = assistant_only_loss_active
+    train_metrics["trainer_backend"] = trainer_backend
     train_metrics["assistant_only_loss_requested"] = bool(args.assistant_only_loss)
     train_metrics["note"] = (
         "assistant-only loss masking enabled via DataCollatorForCompletionOnlyLM"
@@ -464,6 +575,7 @@ def main() -> None:
         assistant_only_loss=args.assistant_only_loss,
         resolved_model_path=resolved_model_path,
         local_files_only=local_files_only,
+        trainer_backend=trainer_backend,
     )
     config_dump = asdict(runtime_config)
     config_dump["bf16_supported"] = bf16_supported

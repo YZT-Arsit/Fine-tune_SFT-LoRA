@@ -1,0 +1,22 @@
+{
+  "active_strategies": [
+    "pi_numeric_surface_perturb",
+    "shuffle_fields",
+    "shuffle_product_information_order",
+    "special_char_perturb",
+    "trim_description"
+  ],
+  "augmented_samples": 2,
+  "badcase_count": 1,
+  "badcase_coverage_rate": 1.0,
+  "badcase_target_tag_counts": {
+    "has_non_ascii": 1,
+    "long_input": 1
+  },
+  "final_samples": 3,
+  "original_samples": 1,
+  "strategy_usage_counts": {
+    "shuffle_fields": 1,
+    "special_char_perturb": 1
+  }
+}

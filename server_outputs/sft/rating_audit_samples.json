@@ -1,0 +1,102 @@
+[
+  {
+    "mapped_rating": 5,
+    "product_url": "https://books.toscrape.com/catalogue/h-is-for-hawk_102/index.html",
+    "raw_rating_text": null
+  },
+  {
+    "mapped_rating": 4,
+    "product_url": "https://books.toscrape.com/catalogue/one-with-you-crossfire-5_626/index.html",
+    "raw_rating_text": null
+  },
+  {
+    "mapped_rating": 2,
+    "product_url": "https://books.toscrape.com/catalogue/like-never-before-walker-family-2_476/index.html",
+    "raw_rating_text": null
+  },
+  {
+    "mapped_rating": 4,
+    "product_url": "https://books.toscrape.com/catalogue/the-origin-of-species_499/index.html",
+    "raw_rating_text": null
+  },
+  {
+    "mapped_rating": 1,
+    "product_url": "https://books.toscrape.com/catalogue/two-summers_415/index.html",
+    "raw_rating_text": null
+  },
+  {
+    "mapped_rating": 3,
+    "product_url": "https://books.toscrape.com/catalogue/the-jazz-of-physics-the-secret-link-between-music-and-the-structure-of-the-universe_350/index.html",
+    "raw_rating_text": null
+  },
+  {
+    "mapped_rating": 2,
+    "product_url": "https://books.toscrape.com/catalogue/batman-the-long-halloween-batman_793/index.html",
+    "raw_rating_text": null
+  },
+  {
+    "mapped_rating": 1,
+    "product_url": "https://books.toscrape.com/catalogue/toddlers-are-aholes-its-not-your-fault_503/index.html",
+    "raw_rating_text": null
+  },
+  {
+    "mapped_rating": 4,
+    "product_url": "https://books.toscrape.com/catalogue/the-gunning-of-america-business-and-the-making-of-american-gun-culture_347/index.html",
+    "raw_rating_text": null
+  },
+  {
+    "mapped_rating": 4,
+    "product_url": "https://books.toscrape.com/catalogue/the-raven-boys-the-raven-cycle-1_411/index.html",
+    "raw_rating_text": null
+  },
+  {
+    "mapped_rating": 2,
+    "product_url": "https://books.toscrape.com/catalogue/midnight-riot-peter-grant-rivers-of-london-books-1_194/index.html",
+    "raw_rating_text": null
+  },
+  {
+    "mapped_rating": 3,
+    "product_url": "https://books.toscrape.com/catalogue/dracula_150/index.html",
+    "raw_rating_text": null
+  },
+  {
+    "mapped_rating": 5,
+    "product_url": "https://books.toscrape.com/catalogue/les-fleurs-du-mal_530/index.html",
+    "raw_rating_text": null
+  },
+  {
+    "mapped_rating": 3,
+    "product_url": "https://books.toscrape.com/catalogue/the-constant-princess-the-tudor-court-1_493/index.html",
+    "raw_rating_text": null
+  },
+  {
+    "mapped_rating": 1,
+    "product_url": "https://books.toscrape.com/catalogue/we-are-all-completely-beside-ourselves_301/index.html",
+    "raw_rating_text": null
+  },
+  {
+    "mapped_rating": 3,
+    "product_url": "https://books.toscrape.com/catalogue/the-wild-robot_288/index.html",
+    "raw_rating_text": null
+  },
+  {
+    "mapped_rating": 3,
+    "product_url": "https://books.toscrape.com/catalogue/the-diary-of-a-young-girl_634/index.html",
+    "raw_rating_text": null
+  },
+  {
+    "mapped_rating": 1,
+    "product_url": "https://books.toscrape.com/catalogue/ive-got-your-number_173/index.html",
+    "raw_rating_text": null
+  },
+  {
+    "mapped_rating": 3,
+    "product_url": "https://books.toscrape.com/catalogue/the-lean-startup-how-todays-entrepreneurs-use-continuous-innovation-to-create-radically-successful-businesses_260/index.html",
+    "raw_rating_text": null
+  },
+  {
+    "mapped_rating": 3,
+    "product_url": "https://books.toscrape.com/catalogue/tracing-numbers-on-a-train_869/index.html",
+    "raw_rating_text": null
+  }
+]

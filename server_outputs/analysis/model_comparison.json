@@ -1,0 +1,289 @@
+{
+  "baseline_model": "qwen-plus",
+  "field_accuracy_delta": {
+    "availability_text_match_rate": {
+      "baseline": 1.0,
+      "delta": 0.0,
+      "improved": true,
+      "lora": 1.0
+    },
+    "category_exact_match_rate": {
+      "baseline": 1.0,
+      "delta": 0.0,
+      "improved": true,
+      "lora": 1.0
+    },
+    "currency_match_rate": {
+      "baseline": 1.0,
+      "delta": 0.0,
+      "improved": true,
+      "lora": 1.0
+    },
+    "in_stock_match_rate": {
+      "baseline": 1.0,
+      "delta": 0.0,
+      "improved": true,
+      "lora": 1.0
+    },
+    "price_exact_match_rate": {
+      "baseline": 1.0,
+      "delta": 0.0,
+      "improved": true,
+      "lora": 1.0
+    },
+    "price_excl_tax_exact_match_rate": {
+      "baseline": 1.0,
+      "delta": 0.0,
+      "improved": true,
+      "lora": 1.0
+    },
+    "price_incl_tax_exact_match_rate": {
+      "baseline": 1.0,
+      "delta": 0.0,
+      "improved": true,
+      "lora": 1.0
+    },
+    "product_type_match_rate": {
+      "baseline": 1.0,
+      "delta": 0.0,
+      "improved": true,
+      "lora": 1.0
+    },
+    "rating_match_rate": {
+      "baseline": 0.0,
+      "delta": 0.2119,
+      "improved": true,
+      "lora": 0.2119
+    },
+    "review_count_match_rate": {
+      "baseline": 1.0,
+      "delta": 0.0,
+      "improved": true,
+      "lora": 1.0
+    },
+    "stock_count_match_rate": {
+      "baseline": 1.0,
+      "delta": 0.0,
+      "improved": true,
+      "lora": 1.0
+    },
+    "tax_exact_match_rate": {
+      "baseline": 1.0,
+      "delta": 0.0,
+      "improved": true,
+      "lora": 1.0
+    },
+    "title_exact_match_rate": {
+      "baseline": 1.0,
+      "delta": -0.0085,
+      "improved": false,
+      "lora": 0.9915
+    },
+    "upc_match_rate": {
+      "baseline": 1.0,
+      "delta": 0.0,
+      "improved": true,
+      "lora": 1.0
+    }
+  },
+  "headline_metrics": {
+    "json_parse_rate": {
+      "baseline": 1.0,
+      "delta": 0.0,
+      "improved": true,
+      "lora": 1.0
+    },
+    "schema_valid_rate": {
+      "baseline": 1.0,
+      "delta": 0.0,
+      "improved": true,
+      "lora": 1.0
+    }
+  },
+  "interview_summary": {
+    "elevator_pitch": "我先用基座模型建立了结构化抽取 baseline，再基于 badcase 分析做数据治理与回环增强，最后用 QLoRA 在单卡 24GB 环境完成微调，并用统一验证集做同口径评测。",
+    "quantified_takeaway": "LoRA 相比 baseline 的 JSON 解析率变化 +0.0000，Schema 合法率变化 +0.0000。",
+    "risk_notes": [
+      "如果 eval_loss 为 NaN，不影响任务级评测结论，面试时以 parse/schema/field accuracy 为主。",
+      "若某些字段未提升，需要结合 badcase bucket 解释数据分布和 schema 约束带来的上限。"
+    ],
+    "top_field_gains": [
+      {
+        "baseline": 0.0,
+        "delta": 0.2119,
+        "lora": 0.2119,
+        "metric": "rating_match_rate"
+      },
+      {
+        "baseline": 1.0,
+        "delta": 0.0,
+        "lora": 1.0,
+        "metric": "availability_text_match_rate"
+      },
+      {
+        "baseline": 1.0,
+        "delta": 0.0,
+        "lora": 1.0,
+        "metric": "category_exact_match_rate"
+      },
+      {
+        "baseline": 1.0,
+        "delta": 0.0,
+        "lora": 1.0,
+        "metric": "currency_match_rate"
+      },
+      {
+        "baseline": 1.0,
+        "delta": 0.0,
+        "lora": 1.0,
+        "metric": "in_stock_match_rate"
+      }
+    ],
+    "top_numeric_improvements": [
+      {
+        "baseline": 0.0,
+        "delta": 0.0,
+        "lora": 0.0,
+        "metric": "price_abs_error_avg"
+      },
+      {
+        "baseline": 0.0,
+        "delta": 0.0,
+        "lora": 0.0,
+        "metric": "price_abs_error_p50"
+      },
+      {
+        "baseline": 0.0,
+        "delta": 0.0,
+        "lora": 0.0,
+        "metric": "price_abs_error_p95"
+      },
+      {
+        "baseline": 0.0,
+        "delta": 0.0,
+        "lora": 0.0,
+        "metric": "price_excl_tax_abs_error_avg"
+      },
+      {
+        "baseline": 0.0,
+        "delta": 0.0,
+        "lora": 0.0,
+        "metric": "price_excl_tax_abs_error_p50"
+      }
+    ]
+  },
+  "lora_model": "final_adapter",
+  "numeric_error_delta": {
+    "price_abs_error_avg": {
+      "baseline": 0.0,
+      "delta": 0.0,
+      "improved": true,
+      "lora": 0.0
+    },
+    "price_abs_error_p50": {
+      "baseline": 0.0,
+      "delta": 0.0,
+      "improved": true,
+      "lora": 0.0
+    },
+    "price_abs_error_p95": {
+      "baseline": 0.0,
+      "delta": 0.0,
+      "improved": true,
+      "lora": 0.0
+    },
+    "price_excl_tax_abs_error_avg": {
+      "baseline": 0.0,
+      "delta": 0.0,
+      "improved": true,
+      "lora": 0.0
+    },
+    "price_excl_tax_abs_error_p50": {
+      "baseline": 0.0,
+      "delta": 0.0,
+      "improved": true,
+      "lora": 0.0
+    },
+    "price_excl_tax_abs_error_p95": {
+      "baseline": 0.0,
+      "delta": 0.0,
+      "improved": true,
+      "lora": 0.0
+    },
+    "price_incl_tax_abs_error_avg": {
+      "baseline": 0.0,
+      "delta": 0.0,
+      "improved": true,
+      "lora": 0.0
+    },
+    "price_incl_tax_abs_error_p50": {
+      "baseline": 0.0,
+      "delta": 0.0,
+      "improved": true,
+      "lora": 0.0
+    },
+    "price_incl_tax_abs_error_p95": {
+      "baseline": 0.0,
+      "delta": 0.0,
+      "improved": true,
+      "lora": 0.0
+    },
+    "tax_abs_error_avg": {
+      "baseline": 0.0,
+      "delta": 0.0,
+      "improved": true,
+      "lora": 0.0
+    },
+    "tax_abs_error_p50": {
+      "baseline": 0.0,
+      "delta": 0.0,
+      "improved": true,
+      "lora": 0.0
+    },
+    "tax_abs_error_p95": {
+      "baseline": 0.0,
+      "delta": 0.0,
+      "improved": true,
+      "lora": 0.0
+    }
+  },
+  "total_evaluated": {
+    "baseline": 118,
+    "lora": 118
+  },
+  "wins": {
+    "field_accuracy": [
+      "availability_text_match_rate",
+      "category_exact_match_rate",
+      "currency_match_rate",
+      "in_stock_match_rate",
+      "price_exact_match_rate",
+      "price_excl_tax_exact_match_rate",
+      "price_incl_tax_exact_match_rate",
+      "product_type_match_rate",
+      "rating_match_rate",
+      "review_count_match_rate",
+      "stock_count_match_rate",
+      "tax_exact_match_rate",
+      "upc_match_rate"
+    ],
+    "headline": [
+      "json_parse_rate",
+      "schema_valid_rate"
+    ],
+    "numeric_error": [
+      "price_abs_error_avg",
+      "price_abs_error_p50",
+      "price_abs_error_p95",
+      "price_excl_tax_abs_error_avg",
+      "price_excl_tax_abs_error_p50",
+      "price_excl_tax_abs_error_p95",
+      "price_incl_tax_abs_error_avg",
+      "price_incl_tax_abs_error_p50",
+      "price_incl_tax_abs_error_p95",
+      "tax_abs_error_avg",
+      "tax_abs_error_p50",
+      "tax_abs_error_p95"
+    ]
+  }
+}

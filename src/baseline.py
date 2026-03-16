@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import json
 import os
 import random
@@ -9,8 +10,10 @@ from typing import Any
 from urllib.parse import urlparse
 
 import requests
+import torch
 
 from .eval_metrics import evaluate_prediction_rows, parse_json_object, validate_prediction_schema
+from .merge_lora import resolve_dtype, resolve_model_path
 from .storage import load_jsonl, write_jsonl
 
 
@@ -228,16 +231,32 @@ class _LocalPredictor(_BasePredictor):
     def __init__(self, model_name: str) -> None:
         super().__init__(model_name)
         try:
-            from transformers import pipeline
+            from transformers import AutoModelForCausalLM, AutoTokenizer
         except ImportError as exc:  # pragma: no cover
             raise RuntimeError(
                 "Local mode requires transformers. Install it manually before using --mode local."
             ) from exc
 
-        self._pipeline = pipeline(
-            "text-generation",
-            model=model_name,
+        resolved_model_path, local_files_only = resolve_model_path(model_name)
+        torch_dtype = resolve_dtype("auto")
+        self.model_name = resolved_model_path
+        self._tokenizer = AutoTokenizer.from_pretrained(
+            resolved_model_path,
+            trust_remote_code=True,
+            use_fast=False,
+            local_files_only=local_files_only,
         )
+        if self._tokenizer.pad_token is None:
+            self._tokenizer.pad_token = self._tokenizer.eos_token
+        self._tokenizer.padding_side = "left"
+        self._model = AutoModelForCausalLM.from_pretrained(
+            resolved_model_path,
+            trust_remote_code=True,
+            torch_dtype=torch_dtype,
+            device_map="auto",
+            local_files_only=local_files_only,
+        )
+        self._model.eval()
         self.guided_json_enabled = False
 
     def predict(
@@ -247,17 +266,23 @@ class _LocalPredictor(_BasePredictor):
         *,
         max_tokens: int,
     ) -> tuple[str, str | None]:
-        prompt = f"{SYSTEM_PROMPT}\n\n{instruction}\n\n{input_text}\n\nJSON:"
-        result = self._pipeline(
-            prompt,
-            max_new_tokens=max_tokens,
-            do_sample=False,
-            temperature=0.0,
-            return_full_text=False,
-        )
-        text = ""
-        if result:
-            text = str(result[0].get("generated_text", ""))
+        prompt = _format_local_chat_prompt(self._tokenizer, instruction, input_text)
+        inputs = self._tokenizer(prompt, return_tensors="pt")
+        target_device = _infer_model_device(self._model)
+        inputs = {key: value.to(target_device) for key, value in inputs.items()}
+        generation_config = copy.deepcopy(self._model.generation_config)
+        generation_config.do_sample = False
+        generation_config.max_new_tokens = max_tokens
+        generation_config.pad_token_id = self._tokenizer.pad_token_id
+        generation_config.eos_token_id = self._tokenizer.eos_token_id
+        generation_config.max_length = None
+        with torch.no_grad():
+            generated = self._model.generate(
+                **inputs,
+                generation_config=generation_config,
+            )
+        new_tokens = generated[0][inputs["input_ids"].shape[1] :]
+        text = self._tokenizer.decode(new_tokens, skip_special_tokens=True).strip()
         if not text.strip():
             return "", "empty_output"
         return text, None
@@ -357,3 +382,36 @@ def _guided_json_schema() -> dict[str, Any]:
             },
         },
     }
+
+
+def _format_local_chat_prompt(tokenizer, instruction: str, input_text: str) -> str:
+    user_content = f"{instruction}\n\n{input_text}"
+    messages = [
+        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "user", "content": user_content},
+    ]
+    if hasattr(tokenizer, "apply_chat_template"):
+        try:
+            return tokenizer.apply_chat_template(
+                messages,
+                tokenize=False,
+                add_generation_prompt=True,
+            )
+        except Exception:  # noqa: BLE001
+            pass
+    return (
+        "<|im_start|>system\n"
+        f"{SYSTEM_PROMPT}\n"
+        "<|im_end|>\n"
+        "<|im_start|>user\n"
+        f"{user_content}\n"
+        "<|im_end|>\n"
+        "<|im_start|>assistant\n"
+    )
+
+
+def _infer_model_device(model) -> torch.device:
+    try:
+        return next(model.parameters()).device
+    except StopIteration:
+        return torch.device("cuda" if torch.cuda.is_available() else "cpu")

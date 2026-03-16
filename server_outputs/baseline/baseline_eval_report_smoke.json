@@ -1,0 +1,84 @@
+{
+  "failure_reasons_top10": [
+    [
+      "401 Client Error: Unauthorized for url: https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions",
+      10
+    ]
+  ],
+  "field_accuracy": {
+    "category_exact_match_rate": 0.0,
+    "in_stock_match_rate": 0.0,
+    "stock_count_match_rate": 0.0,
+    "title_exact_match_rate": 0.0,
+    "upc_match_rate": 0.0
+  },
+  "guided_json_enabled": false,
+  "json_parse_rate": 0.0,
+  "mode": "api",
+  "model_name": "qwen-plus",
+  "numeric_error": {
+    "price_abs_error_avg": null,
+    "price_abs_error_p50": null,
+    "price_abs_error_p95": null,
+    "price_excl_tax_abs_error_avg": null,
+    "tax_abs_error_avg": null
+  },
+  "pred_out": "outputs/baseline/baseline_predictions_smoke.jsonl",
+  "sample_badcases": [
+    {
+      "raw_response_preview": "",
+      "reason": "401 Client Error: Unauthorized for url: https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions",
+      "sample_id": "1dfe412b8ac00530"
+    },
+    {
+      "raw_response_preview": "",
+      "reason": "401 Client Error: Unauthorized for url: https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions",
+      "sample_id": "0312262ecafa5a40"
+    },
+    {
+      "raw_response_preview": "",
+      "reason": "401 Client Error: Unauthorized for url: https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions",
+      "sample_id": "5dada2b7be26bd03"
+    },
+    {
+      "raw_response_preview": "",
+      "reason": "401 Client Error: Unauthorized for url: https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions",
+      "sample_id": "7ae099f3898e0209"
+    },
+    {
+      "raw_response_preview": "",
+      "reason": "401 Client Error: Unauthorized for url: https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions",
+      "sample_id": "7d6d2a6c0276f81b"
+    },
+    {
+      "raw_response_preview": "",
+      "reason": "401 Client Error: Unauthorized for url: https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions",
+      "sample_id": "e80f8e518b300dfe"
+    },
+    {
+      "raw_response_preview": "",
+      "reason": "401 Client Error: Unauthorized for url: https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions",
+      "sample_id": "72f9d5be3472d34e"
+    },
+    {
+      "raw_response_preview": "",
+      "reason": "401 Client Error: Unauthorized for url: https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions",
+      "sample_id": "f2df3bb043a8abb0"
+    },
+    {
+      "raw_response_preview": "",
+      "reason": "401 Client Error: Unauthorized for url: https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions",
+      "sample_id": "961f18db4f138211"
+    },
+    {
+      "raw_response_preview": "",
+      "reason": "401 Client Error: Unauthorized for url: https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions",
+      "sample_id": "0651062381f0636a"
+    }
+  ],
+  "schema_valid_rate": 0.0,
+  "total_evaluated": 10,
+  "total_requested": 10,
+  "total_samples": 10,
+  "val_path": "outputs/sft/val.jsonl"
+}

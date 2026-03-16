@@ -1,0 +1,349 @@
+{
+  "category_missing_count": 152,
+  "drop_reasons": {
+    "category_default_dropped": 0,
+    "invalid_output_json": 0,
+    "key_attr_parse_failed": 0,
+    "mojibake_detected": 0,
+    "other_exception": 0,
+    "price_parse_failed": 0,
+    "rating_out_of_range": 0
+  },
+  "dropped_count": 0,
+  "examples": {
+    "sample_dedup_cases": [
+      {
+        "after_head_preview": "It's hard to imagine a world without A Light in the Attic. This now-classic collection of poetry and drawings from Shel Silverstein celebrates its 20th anniversary with this special edition. Silverste",
+        "after_len": 808,
+        "after_mid_preview": "sit still and read these rhythmic words and laugh and smile and love th It's hard to imagine a world without A Light in the Attic. Lemon-faced adults and fidgety kids sit still and read these rhythmic",
+        "before_head_preview": "It's hard to imagine a world without A Light in the Attic. This now-classic collection of poetry and drawings from Shel Silverstein celebrates its 20th anniversary with this special edition. Silverste",
+        "before_len": 1017,
+        "before_mid_preview": "hout A Light in the Attic. This now-classic collection of poetry and drawings from Shel Silverstein celebrates its 20th anniversary with this special edition. Silverstein's humorous and creative verse",
+        "product_url": "https://books.toscrape.com/catalogue/a-light-in-the-attic_1000/index.html",
+        "shrink_ratio": 0.7945
+      },
+      {
+        "after_head_preview": "\"Erotic and absorbing...Written with starling power.\"--\"The New York Times Book Review \" Nan King, an oyster girl, is captivated by the music hall phenomenon Kitty Butler, a male impersonator extraord",
+        "after_len": 928,
+        "after_mid_preview": "es Kitty's \"Erotic and absorbing...Written with starling power.\"--\"The New York Times Book Review \" Nan King, an oyster girl, is captivated by the music hall phenomenon Kitty Butler, a male impersonat",
+        "before_head_preview": "\"Erotic and absorbing...Written with starling power.\"--\"The New York Times Book Review \" Nan King, an oyster girl, is captivated by the music hall phenomenon Kitty Butler, a male impersonator extraord",
+        "before_len": 1029,
+        "before_mid_preview": "arling power.\"--\"The New York Times Book Review \" Nan King, an oyster girl, is captivated by the music hall phenomenon Kitty Butler, a male impersonator extraordinaire treading the boards in Canterbur",
+        "product_url": "https://books.toscrape.com/catalogue/tipping-the-velvet_999/index.html",
+        "shrink_ratio": 0.9018
+      },
+      {
+        "after_head_preview": "Dans une France assez proche de la nôtre, un homme s'engage dans la carrière universitaire. Peu motivé par l'enseignement, il s'attend à une vie ennuyeuse mais calme, protégée des grands drames histor",
+        "after_len": 868,
+        "after_mid_preview": "ans soubresauts, sans vraie révolution, s Dans une France assez proche de la nôtre, un homme s'engage dans la carrière universitaire. Cette implosion sans soubresauts, sans vraie révolution, se dévelo",
+        "before_head_preview": "Dans une France assez proche de la nôtre, un homme s'engage dans la carrière universitaire. Peu motivé par l'enseignement, il s'attend à une vie ennuyeuse mais calme, protégée des grands drames histor",
+        "before_len": 1093,
+        "before_mid_preview": "rrière universitaire. Peu motivé par l'enseignement, il s'attend à une vie ennuyeuse mais calme, protégée des grands drames historiques. Cependant les forces en jeu dans le pays ont fissuré le système",
+        "product_url": "https://books.toscrape.com/catalogue/soumission_998/index.html",
+        "shrink_ratio": 0.7941
+      },
+      {
+        "after_head_preview": "WICKED above her hipbone, GIRL across her heart Words are like a road map to reporter Camille Preaker's troubled past. Fresh from a brief stay at a psych hospital, Camille's first assignment from the ",
+        "after_len": 1427,
+        "after_mid_preview": "c, hypochondriac mother or to the half-sister she barely knows: a beautiful thirteen-year-old with an eerie grip on the town. Now, installed again in her family's Victorian mansion, Camille is haunted",
+        "before_head_preview": "WICKED above her hipbone, GIRL across her heart Words are like a road map to reporter Camille Preaker's troubled past. Fresh from a brief stay at a psych hospital, Camille's first assignment from the ",
+        "before_len": 1635,
+        "before_mid_preview": "eecap, BABYDOLL on her leg Since she left town eight years ago, Camille has hardly spoken to her neurotic, hypochondriac mother or to the half-sister she barely knows: a beautiful thirteen-year-old wi",
+        "product_url": "https://books.toscrape.com/catalogue/sharp-objects_997/index.html",
+        "shrink_ratio": 0.8728
+      },
+      {
+        "after_head_preview": "Patient Twenty-nine.A monster roams the halls of Soothing Hills Asylum. Three girls dead. 29 is endowed with the curse…or gift of perception. She hears messages in music, sees lyrics in paintings. And",
+        "after_len": 706,
+        "after_mid_preview": " corn music is the only constant in her life.Mason, a new, kind orderly, sees 29 as a woman, not a lunatic. And as his bel Patient Twenty-nine.A monster roams the halls of Soothing Hills Asylum. And a",
+        "before_head_preview": "Patient Twenty-nine.A monster roams the halls of Soothing Hills Asylum. Three girls dead. 29 is endowed with the curse…or gift of perception. She hears messages in music, sees lyrics in paintings. And",
+        "before_len": 995,
+        "before_mid_preview": " monster roams the halls of Soothing Hills Asylum. Three girls dead. 29 is endowed with the curse…or gift of perception. She hears messages in music, sees lyrics in paintings. And the corn. A lifetime",
+        "product_url": "https://books.toscrape.com/catalogue/the-requiem-red_995/index.html",
+        "shrink_ratio": 0.7095
+      },
+      {
+        "after_head_preview": "\"If you have a heart, if you have a soul, Karen Hicks' The Coming Woman will make you fall in love with Victoria Woodhull.\"-Kinky Friedman, author and Governor of the Heart of Texas \"What kind of conf",
+        "after_len": 3349,
+        "after_mid_preview": "ntly readable style.\"-Tim Wise, author, \"White Like Me: Reflections on Race from a Privileged Son\"\"The Coming Woman\" is a novel based on the life of feminist Victoria Woodhull, the first woman to run ",
+        "before_head_preview": "\"If you have a heart, if you have a soul, Karen Hicks' The Coming Woman will make you fall in love with Victoria Woodhull.\"-Kinky Friedman, author and Governor of the Heart of Texas \"What kind of conf",
+        "before_len": 3411,
+        "before_mid_preview": ", told in an engaging and eminently readable style.\"-Tim Wise, author, \"White Like Me: Reflections on Race from a Privileged Son\"\"The Coming Woman\" is a novel based on the life of feminist Victoria Wo",
+        "product_url": "https://books.toscrape.com/catalogue/the-coming-woman-a-novel-based-on-the-life-of-the-infamous-feminist-victoria-woodhull_993/index.html",
+        "shrink_ratio": 0.9818
+      },
+      {
+        "after_head_preview": "Since her assault, Miss Annette Chetwynd has been plagued by nightmares and worries about an arranged marriage. But she yearns to find her anonymous rescuer. Unfortunately, her health and intellect pr",
+        "after_len": 979,
+        "after_mid_preview": "ault, Miss Annette Chetwynd has been plagued by nightmares and worries about an arranged marriage. Peter Adsley is joining the clergy, and he desires a godly wife by his side. After his failed attempt",
+        "before_head_preview": "Since her assault, Miss Annette Chetwynd has been plagued by nightmares and worries about an arranged marriage. But she yearns to find her anonymous rescuer. Unfortunately, her health and intellect pr",
+        "before_len": 1204,
+        "before_mid_preview": " to find her anonymous rescuer. Unfortunately, her health and intellect prevent it. Both repel suitors and cause Annette to doubt God's existence, at least until He answers her prayers in an unusual w",
+        "product_url": "https://books.toscrape.com/catalogue/starving-hearts-triangular-trade-trilogy-1_990/index.html",
+        "shrink_ratio": 0.8131
+      },
+      {
+        "after_head_preview": "This book is an important and complete collection of the Sonnets of William Shakespeare. Most readers are aware of the great plays and manuscripts written for the stage, but are unaware of the magnifi",
+        "after_len": 701,
+        "after_mid_preview": "riod. This is an excellent, complete collection of the Sonnets and poetry of William Shakespeare and should not be missed by This book is an important and complete collection of the Sonnets of William",
+        "before_head_preview": "This book is an important and complete collection of the Sonnets of William Shakespeare. Most readers are aware of the great plays and manuscripts written for the stage, but are unaware of the magnifi",
+        "before_len": 868,
+        "before_mid_preview": " Shakespeare and should not be missed by This book is an important and complete collection of the Sonnets of William Shakespeare. Most readers are aware of the great plays and manuscripts written for ",
+        "product_url": "https://books.toscrape.com/catalogue/shakespeares-sonnets_989/index.html",
+        "shrink_ratio": 0.8076
+      },
+      {
+        "after_head_preview": "Aaron Ledbetter's future had been planned out for him since before he was born. Each year, the Ledbetter family vacation on Tybee Island gave Aaron a chance to briefly free himself from his family's e",
+        "after_len": 649,
+        "after_mid_preview": "ts Jonas \"Lucky\" Luckett, a caricature artist in town with the traveling carnival, he must choose between the life that's been mapped out for him, and Aaron Ledbetter's future had been planned out for",
+        "before_head_preview": "Aaron Ledbetter's future had been planned out for him since before he was born. Each year, the Ledbetter family vacation on Tybee Island gave Aaron a chance to briefly free himself from his family's e",
+        "before_len": 782,
+        "before_mid_preview": "eling carnival, he must choose between the life that's been mapped out for him, and Aaron Ledbetter's future had been planned out for him since before he was born. Each year, the Ledbetter family vaca",
+        "product_url": "https://books.toscrape.com/catalogue/set-me-free_988/index.html",
+        "shrink_ratio": 0.8299
+      },
+      {
+        "after_head_preview": "Scott Pilgrim's life is totally sweet. He's 23 years old, he's in a rockband, he's \"between jobs\" and he's dating a cute high school girl. Nothing could possibly go wrong, unless a seriously mind-blow",
+        "after_len": 643,
+        "after_mid_preview": "ionable, rollerblading delivery girl named Ramona Flowers starts cruising through his dreams and sailing by him at parties. Will Scott's awesome life get Scott Pilgrim's life is totally sweet. Will Sc",
+        "before_head_preview": "Scott Pilgrim's life is totally sweet. He's 23 years old, he's in a rockband, he's \"between jobs\" and he's dating a cute high school girl. Nothing could possibly go wrong, unless a seriously mind-blow",
+        "before_len": 949,
+        "before_mid_preview": " Scott Pilgrim's life is totally sweet. He's 23 years old, he's in a rockband, he's \"between jobs\" and he's dating a cute high school girl. Nothing could possibly go wrong, unless a seriously mind-blo",
+        "product_url": "https://books.toscrape.com/catalogue/scott-pilgrims-precious-little-life-scott-pilgrim-1_987/index.html",
+        "shrink_ratio": 0.6776
+      }
+    ]
+  },
+  "fixes_applied": {
+    "category_default_to_null": 152,
+    "currency_symbol_stripped": 3000,
+    "description_deduped": 668,
+    "key_attr_numeric_cast": 4000,
+    "mojibake_fixed": 3570
+  },
+  "label_quality": {
+    "rating_distribution": {
+      "1": 226,
+      "2": 196,
+      "3": 203,
+      "4": 179,
+      "5": 196,
+      "null": 0
+    },
+    "rating_mismatch_count": 0,
+    "rating_out_of_range_count": 0
+  },
+  "output_quality": {
+    "schema_valid_rate": 1.0,
+    "stable_json_serialization_enabled": true
+  },
+  "rating_audit_path": "outputs/sft/rating_audit_samples.json",
+  "sample_badcases": [],
+  "split_config": {
+    "enabled": true,
+    "product_url_fallback_count": 0,
+    "split_by": "upc",
+    "upc_samples_count": 1000,
+    "val_ratio": 0.1
+  },
+  "splits": {
+    "train_category_top10": [
+      [
+        "null",
+        136
+      ],
+      [
+        "Nonfiction",
+        96
+      ],
+      [
+        "Sequential Art",
+        67
+      ],
+      [
+        "Add a comment",
+        59
+      ],
+      [
+        "Fiction",
+        58
+      ],
+      [
+        "Young Adult",
+        48
+      ],
+      [
+        "Fantasy",
+        35
+      ],
+      [
+        "Mystery",
+        31
+      ],
+      [
+        "Romance",
+        29
+      ],
+      [
+        "Childrens",
+        27
+      ]
+    ],
+    "train_count": 882,
+    "val_category_top10": [
+      [
+        "null",
+        16
+      ],
+      [
+        "Nonfiction",
+        14
+      ],
+      [
+        "Fantasy",
+        13
+      ],
+      [
+        "Sequential Art",
+        8
+      ],
+      [
+        "Add a comment",
+        8
+      ],
+      [
+        "Fiction",
+        7
+      ],
+      [
+        "Romance",
+        6
+      ],
+      [
+        "Young Adult",
+        6
+      ],
+      [
+        "Poetry",
+        4
+      ],
+      [
+        "Food and Drink",
+        4
+      ]
+    ],
+    "val_count": 118
+  },
+  "stats": {
+    "category_top20": [
+      [
+        "null",
+        152
+      ],
+      [
+        "Nonfiction",
+        110
+      ],
+      [
+        "Sequential Art",
+        75
+      ],
+      [
+        "Add a comment",
+        67
+      ],
+      [
+        "Fiction",
+        65
+      ],
+      [
+        "Young Adult",
+        54
+      ],
+      [
+        "Fantasy",
+        48
+      ],
+      [
+        "Romance",
+        35
+      ],
+      [
+        "Mystery",
+        32
+      ],
+      [
+        "Food and Drink",
+        30
+      ],
+      [
+        "Childrens",
+        29
+      ],
+      [
+        "Historical Fiction",
+        26
+      ],
+      [
+        "Poetry",
+        19
+      ],
+      [
+        "Classics",
+        19
+      ],
+      [
+        "History",
+        18
+      ],
+      [
+        "Horror",
+        17
+      ],
+      [
+        "Womens Fiction",
+        17
+      ],
+      [
+        "Science Fiction",
+        16
+      ],
+      [
+        "Science",
+        14
+      ],
+      [
+        "Music",
+        13
+      ]
+    ],
+    "description_len_avg": 1308.46,
+    "description_len_p50": 1220.0,
+    "description_len_p95": 2374.0,
+    "price_avg": 35.07,
+    "price_p50": 35.96,
+    "price_p95": 57.2,
+    "rating_distribution": {
+      "1": 226,
+      "2": 196,
+      "3": 203,
+      "4": 179,
+      "5": 196,
+      "null": 0
+    }
+  },
+  "strict": true,
+  "text_quality": {
+    "description_dedup_applied_count": 668,
+    "description_dedup_avg_shrink_ratio": 0.9045,
+    "description_dedup_over_shrink_count": 0,
+    "description_len_after_avg": 1308.46,
+    "description_len_after_p50": 1220.0,
+    "description_len_after_p95": 2374.0,
+    "description_len_before_avg": 1431.18,
+    "description_len_before_p50": 1347.0,
+    "description_len_before_p95": 2470.0
+  },
+  "total_read": 1000,
+  "total_written": 1000
+}

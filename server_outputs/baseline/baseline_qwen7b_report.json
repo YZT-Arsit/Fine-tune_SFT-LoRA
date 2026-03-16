@@ -1,0 +1,28 @@
+{
+  "failure_reasons_top10": [],
+  "field_accuracy": {
+    "category_exact_match_rate": 0.9237,
+    "in_stock_match_rate": 1.0,
+    "stock_count_match_rate": 1.0,
+    "title_exact_match_rate": 1.0,
+    "upc_match_rate": 1.0
+  },
+  "guided_json_enabled": true,
+  "json_parse_rate": 1.0,
+  "mode": "api",
+  "model_name": "/root/autodl-tmp/models/Qwen2.5-7B-Instruct",
+  "numeric_error": {
+    "price_abs_error_avg": 0.0,
+    "price_abs_error_p50": 0.0,
+    "price_abs_error_p95": 0.0,
+    "price_excl_tax_abs_error_avg": 0.0,
+    "tax_abs_error_avg": 0.0
+  },
+  "pred_out": "outputs/baseline/baseline_qwen7b_predictions.jsonl",
+  "sample_badcases": [],
+  "schema_valid_rate": 1.0,
+  "total_evaluated": 118,
+  "total_requested": 118,
+  "total_samples": 118,
+  "val_path": "outputs/sft/val.jsonl"
+}

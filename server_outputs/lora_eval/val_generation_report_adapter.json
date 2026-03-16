@@ -10,7 +10,7 @@
     "price_excl_tax_exact_match_rate": 1.0,
     "price_incl_tax_exact_match_rate": 1.0,
     "product_type_match_rate": 1.0,
-    "rating_match_rate": 0.2119,
+    "rating_match_rate": 0.1949,
     "review_count_match_rate": 1.0,
     "stock_count_match_rate": 1.0,
     "tax_exact_match_rate": 1.0,
